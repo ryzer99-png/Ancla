@@ -2,11 +2,13 @@ package co.ryzer.ancla.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +36,7 @@ import co.ryzer.ancla.ui.theme.AnclaBackground
 import co.ryzer.ancla.ui.theme.AnclaTextStyles
 import co.ryzer.ancla.ui.theme.AnclaTheme
 import co.ryzer.ancla.ui.theme.CardGreen
+import co.ryzer.ancla.ui.theme.SettingsScreenDimens
 import co.ryzer.ancla.ui.theme.SurfaceWhite
 import co.ryzer.ancla.ui.theme.TextPrimary
 import co.ryzer.ancla.ui.theme.TextSecondary
@@ -57,6 +60,15 @@ private fun moveItem(order: List<String>, fromIndex: Int, toIndex: Int): List<St
     val moved = mutable.removeAt(fromIndex)
     mutable.add(toIndex, moved)
     return mutable
+}
+
+private fun paletteLabelRes(colorId: String): Int {
+    return when (colorId) {
+        "rose" -> R.string.palette_rose
+        "sage" -> R.string.palette_sage
+        "peach" -> R.string.palette_peach
+        else -> R.string.palette_lavender
+    }
 }
 
 @Composable
@@ -253,44 +265,71 @@ fun SettingsVisualPreferencesScreen(
         ToolsScreenDimens.horizontalPaddingCompact
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(AnclaBackground)
             .padding(horizontal = horizontalPadding, vertical = ToolsScreenDimens.verticalPadding),
         verticalArrangement = Arrangement.spacedBy(ToolsScreenDimens.gridSpacing)
     ) {
-        item {
-            Text(
-                text = stringResource(R.string.settings_palette_preview_title),
-                style = if (isExpanded) AnclaTextStyles.toolsTitleExpanded else AnclaTextStyles.toolsTitle,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(ToolsScreenDimens.iconToTextSpacer))
-            Text(
-                text = stringResource(R.string.settings_palette_preview_description),
-                style = AnclaTextStyles.toolCardSubtitle,
-                color = TextSecondary
-            )
-            Spacer(modifier = Modifier.height(ToolsScreenDimens.gridSpacing))
+        Text(
+            text = stringResource(R.string.settings_palette_preview_title),
+            style = if (isExpanded) AnclaTextStyles.toolsTitleExpanded else AnclaTextStyles.toolsTitle,
+            color = TextPrimary
+        )
+        Text(
+            text = stringResource(R.string.settings_palette_preview_description),
+            style = AnclaTextStyles.toolCardSubtitle,
+            color = TextSecondary
+        )
 
-            SensoryPalettePicker(
-                selectedColorId = selectedColorId,
-                onColorSelected = onPalettePreviewChanged
-            )
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.72f)),
+            shape = RoundedCornerShape(ToolsScreenDimens.cardCornerRadius),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(ToolsScreenDimens.cardContentPadding),
+                verticalArrangement = Arrangement.spacedBy(ToolsScreenDimens.iconToTextSpacer)
+            ) {
+                SensoryPalettePicker(
+                    selectedColorId = selectedColorId,
+                    onColorSelected = onPalettePreviewChanged
+                )
+                Text(
+                    text = stringResource(paletteLabelRes(selectedColorId)),
+                    style = AnclaTextStyles.toolCardSubtitle,
+                    color = TextSecondary
+                )
+            }
+        }
 
-            Spacer(modifier = Modifier.height(ToolsScreenDimens.iconToTextSpacer))
-            Text(
-                text = if (hasPendingPaletteChanges) {
-                    stringResource(R.string.settings_palette_unsaved_changes)
-                } else {
-                    stringResource(R.string.settings_palette_saved_state)
-                },
-                style = AnclaTextStyles.toolCardSubtitle,
-                color = TextSecondary
-            )
+        Text(
+            text = if (hasPendingPaletteChanges) {
+                stringResource(R.string.settings_palette_unsaved_changes)
+            } else {
+                stringResource(R.string.settings_palette_saved_state)
+            },
+            style = AnclaTextStyles.toolCardSubtitle,
+            color = TextSecondary
+        )
 
-            Spacer(modifier = Modifier.height(ToolsScreenDimens.gridSpacing))
+        Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ToolsScreenDimens.iconToTextSpacer)
+        ) {
+            TextButton(
+                onClick = onDiscardPalettePreview,
+                enabled = hasPendingPaletteChanges,
+                modifier = Modifier.heightIn(min = SettingsScreenDimens.saveButtonMinHeight)
+            ) {
+                Text(text = stringResource(R.string.dialog_cancel))
+            }
+
             Button(
                 onClick = onSavePalette,
                 enabled = hasPendingPaletteChanges,
@@ -298,7 +337,10 @@ fun SettingsVisualPreferencesScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CardGreen,
                     contentColor = TextPrimary
-                )
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = SettingsScreenDimens.saveButtonMinHeight)
             ) {
                 Text(text = stringResource(R.string.settings_palette_save_button))
             }
